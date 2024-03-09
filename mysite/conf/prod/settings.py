@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['mysite.com']
 
 INSTALLED_APPS = [
     'home.apps.HomeConfig',
+    'accounts.apps.AccountsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
