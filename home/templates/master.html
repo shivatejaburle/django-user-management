@@ -4,6 +4,8 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Sample Django Project to demonstrate basic user functionality.">
+        <meta name="author" content="Shivateja Burle">
         <title>{% block title %}{% endblock %}</title>
         {% load bootstrap5 %}
         {% bootstrap_css %}
@@ -15,6 +17,9 @@
         {% block navbar %}
             {% include "menu.html" %}
         {% endblock %}
+        <div class="container mt-3">
+            {% bootstrap_messages %}
+        </div>
         {% block content %}
         {% endblock %}
         <script>

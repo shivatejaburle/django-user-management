@@ -1,0 +1,21 @@
+{% extends 'master.html' %}
+
+{% load bootstrap5 %}
+
+{% block title %}
+    Create an Account
+{% endblock title %}
+
+{% block content %}
+    <div class="container mt-3">
+        <h1>Create an Account</h1>
+    </div>
+    <div class="container mt-3">
+        <form method="post">
+            {% csrf_token %}
+            {% bootstrap_form form %} 
+            <button class="btn btn-primary" type="submit">Create</button>
+        </form>
+    </div>
+{% endblock content %}
+    

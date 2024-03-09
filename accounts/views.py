@@ -1,15 +1,34 @@
 from django.views.generic import View, FormView
 from django.conf import settings
-from django.shortcuts import redirect
-from accounts.forms import SignInViaEmailForm, SignInViaEmailOrUsernameForm, SignInViaUsernameForm
+from django.shortcuts import redirect, get_object_or_404
+
+# Forms
+from accounts.forms import (
+    SignInViaEmailForm, SignInViaEmailOrUsernameForm, 
+    SignInViaUsernameForm, SignUpForm,
+)
+
 from django.utils.decorators import method_decorator
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
-from django.contrib.auth import login, REDIRECT_FIELD_NAME
+from django.contrib.auth import login, REDIRECT_FIELD_NAME, authenticate
 from django.utils.http import url_has_allowed_host_and_scheme as is_safe_url
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import LogoutView as BaseLogoutView
+from django.contrib.auth.views import (
+    LogoutView as BaseLogoutView
+)
+from django.utils.crypto import get_random_string
+
+# Models
+from accounts.models import Activation
+
+from .utils import (
+    send_activation_email
+)
+
+from django.contrib import messages
+
 # Guest View
 class GuestOnlyView(View):
     def dispatch(self, request, *args, **kwargs):
@@ -22,6 +41,7 @@ class GuestOnlyView(View):
 # Login View
 class LogInView(GuestOnlyView, FormView):
     template_name = 'accounts/log_in.html'
+    success_url = settings.LOGIN_REDIRECT_URL
 
     @staticmethod
     def get_form_class(**kwargs):
@@ -63,8 +83,72 @@ class LogInView(GuestOnlyView, FormView):
         if url_is_safe:
             return redirect(redirect_to)
 
-        return redirect(settings.LOGIN_REDIRECT_URL)
+        return redirect(self.success_url)
 
 # Logout
 class LogOutView(LoginRequiredMixin, BaseLogoutView):
     template_name = "accounts/log_out.html"
+
+# Signup View
+class SignUpView(GuestOnlyView, FormView):
+    template_name = "accounts/sign_up.html"
+    form_class = SignUpForm
+    success_url = 'index'
+
+    def form_valid(self, form):
+        request = self.request
+        user = form.save(commit=False)
+
+        if settings.DISABLE_USERNAME:
+            # Set a temporary username
+            user.username = get_random_string()
+        else:
+            user.username = form.cleaned_data["username"]
+
+        if settings.ENABLE_USER_ACTIVATION:
+            user.is_active = False
+
+         # Create a user record
+        user.save()
+
+        # Change the username to the "user_ID" form
+        if settings.DISABLE_USERNAME:
+            user.username = f'user_{user.id}'
+            user.save()
+        
+        if settings.ENABLE_USER_ACTIVATION:
+            code = get_random_string(20)
+            # Object for Activation Model
+            actObj = Activation()
+            actObj.code = code
+            actObj.user = user
+            actObj.save()
+
+            send_activation_email(request, user.email, code)
+            messages.success(request, "Please check your email to activate your account.")
+        else:
+            raw_password = form.cleaned_data['password1']
+
+            user = authenticate(username = user.username, password=raw_password)
+            login(request, user)
+            
+            messages.success(request, 'Your account was successfully created. You are now logged in.')
+        
+        return redirect(self.success_url)
+    
+class ActivateView(View):
+    @staticmethod
+    def get(request, code):
+        activate = get_object_or_404(Activation, code=code)
+
+        # Activate User Account
+        user_account = activate.user
+        user_account.is_active = True
+        user_account.save()
+
+        # Remove the activation record
+        activate.delete()
+
+        messages.success(request, "Account has been activated!")
+
+        return redirect('accounts:log_in')
