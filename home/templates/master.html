@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}{% endblock %}</title>
+        {% load bootstrap5 %}
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <link rel="icon" type="image/png" href="{% static 'home/favicon.ico' %}">
+    </head>
+    <body>
+        {% block navbar %}
+            {% include "menu.html" %}
+        {% endblock %}
+        {% block content %}
+        {% endblock %}
+        <script>
+            function setActive(){
+                if ("{{request.resolver_match.route}}") {
+                    document.getElementById("{{request.resolver_match.route}}").classList.add('active');
+                } else {
+                    document.getElementById("home").classList.add('active');
+                }
+            }
+            setActive();
+        </script>
+    </body>
+</html>

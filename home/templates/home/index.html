@@ -1,0 +1,29 @@
+{% extends "master.html" %}
+
+{% block title %}
+    Django User Management
+{% endblock %}
+
+{% block content %}   
+    <div class="container">
+        <h1 class="m-2 p-2">Django User Management</h1>
+        {% if user.is_authenticated %}
+            <h3 class="font-monospace p-4 text-primary fw-bold fw-italic">
+                Hello {{ user.get_full_name }}...!
+            </h3>
+        {% else %}
+            <h3 class="font-monospace p-4 text-primary fw-bold fw-italic">
+                Hello Guest...!
+            </h3>
+        {% endif %}
+        <div class="list-group">
+            {% if user.is_superuser %}
+                <a href="/admin" target="_blank" class="list-group-item list-group-item-action">
+                    <i class="bi bi-chevron-double-right text-primary"></i>
+                    Django Site Admin <i class="bi bi-arrow-bar-right text-primary"></i> 
+                    Django Administration
+                </a>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
